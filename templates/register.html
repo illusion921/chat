@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>register</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/mychat.css" rel="stylesheet">
+    <link href="/static/Font-Awesome-3.2.1/css/font-awesome.min.css" rel="stylesheet">
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+    <style type="text/css">
+        body{
+            margin: 0;
+        }
+        .left{
+            float: left;
+        }
+        .right{
+            float: right;
+        }
+        .pg-header{
+            background-color: #23d745;
+            height:50px;
+            line-height: 50px;
+        }
+        .pg-header .log{
+            height: 50px;
+            width: 100px;
+            margin-left: 200px;
+            text-align: center;
+        }
+        .register{
+            height: 500px;
+            width: 550px;
+            margin-top: 30px;
+            border-right: dashed black 1px;
+        }
+        .info{
+            height: 500px;
+            width: 550px;
+            margin-top: 30px;
+        }
+        .info img{
+            height: 250px;
+            width: 400px;
+        }
+        .welcome{
+            height: 50px;
+            width: 550px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="pg-header">
+        <div class="log left">
+            <i class="icon-comments-alt icon-2x"></i>
+            聊天室
+        </div>
+    </div>
+    <div class="pg-content">
+        <div class="container">
+            <div class="register left">
+                <div class="welcome">
+                    <i class="icon-desktop icon-3x"></i> 欢迎注册
+                </div>
+                <form method="post" action="{% url 'register' %}">{% csrf_token %}
+                    <div class="input-group col-md-8">
+                        <span class="input-group-addon" id="basic-addon1">邮箱</span>
+                        <input type="text" class="form-control" placeholder="email" name='email' aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group col-md-8">
+                        <span class="input-group-addon" id="basic-addon1">用户名</span>
+                        <input type="text" class="form-control" placeholder="username" name="username" aria-describedby="basic-addon1">
+                    </div>
+                    <div class="input-group col-md-8" id="pwd">
+                        <span class="input-group-addon" id="basic-addon1">密码</span>
+                        <input type="password" class="form-control" placeholder="password" name="password" >
+                    </div>
+                    <div class="input-group col-md-8">
+                        <span class="input-group-addon" id="basic-addon1">确认密码</span>
+                        <input type="password" class="form-control" placeholder="password" name="password-again">
+                    </div>
+                    {% if register_err %}
+                        <div style="color: red">{{ register_err }}</div>
+                    {% endif %}
+                    <div class="col-md-8">
+                        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit1">点击注册</button>
+                    </div>
+                </form>
+            </div>
+            <div class="info left">
+                {% load static %}
+                <img src="{% static "imgs/chat.jpg" %}" alt="My image"/>
+            </div>
+        </div>
+    </div>
+    <div class="pg-footer"></div>
+
+
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            add_style();
+        })
+
+        function add_style() {
+            var register_div = $('.register div');
+            for(var i=0;i<register_div.length;i++){
+                register_div[i].style.marginTop = '30px';
+                register_div[i].style.marginLeft = '50px';
+            }
+        }
+
+
+    </script>
+</body>
+</html>

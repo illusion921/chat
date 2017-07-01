@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>record</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/mychat.css" rel="stylesheet">
+
+    <style type="text/css">
+
+        #file{
+            margin-top: 10px;
+
+        }
+        #file div{
+
+        }
+    </style>
+</head>
+<body>
+    <div class="pg-header">
+        <div class="log left">
+            <i class="icon-comments-alt icon-2x"></i>
+            聊天室
+        </div>
+        <div class="user right">
+            {% load static %}
+            <img src="{% static "imgs/user.png" %}" alt="My image"/>
+            <div class="dropdown right">
+                {% if request.user.is_authenticated %}
+                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1"
+                            data-toggle="dropdown" from_id="{{ request.user.userprofile.id }}"
+                            from_name="{{ request.user.userprofile.name }}"
+                            aria-haspopup="true" aria-expanded="true">
+                        {{ request.user.userprofile.name }}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                        <li><a href="/">聊天</a></li>
+                        <li><a href="{% url 'imgs' %}">收到的文件</a></li>
+                        <li><a href="{% url 'chat_record' %}">聊天记录</a></li>
+                        <li><a href="{% url 'group' %}">创建群组</a></li>
+                        <li><a href="{% url 'chgpwd' %}">修改密码</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="/quit">退出</a></li>
+                    </ul>
+                {% else %}
+                    <a href="/login">登录</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="pg-content">
+        <div class="container">
+
+            <div class="row" id="file">
+                {% for img in data %}
+                    <div class="panel panel-default">
+                      <div class="panel-heading">
+                          File from {{ img.user }}
+                          <span id="date" class="right">{{ img.add_time }}</span>
+                      </div>
+                      <div class="panel-body">
+                        <a href="/static/{{ img.msg_img }}" id="download">
+                            {{ img.file_name }}
+                            <span class="right">点击下载</span>
+                        </a>
+                      </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="pg-footer"></div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+</body>
+</html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>login</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/mychat.css" rel="stylesheet">
+    <link href="/static/Font-Awesome-3.2.1/css/font-awesome.min.css" rel="stylesheet">
+    <style type="text/css">
+        body{
+            margin: 0;
+        }
+        .left{
+            float: left;
+        }
+        .right{
+            float: right;
+        }
+        .pg-header{
+            background-color: #23d745;
+            height:50px;
+            line-height: 50px;
+        }
+        .pg-header .log{
+            height: 50px;
+            width: 100px;
+            margin-left: 200px;
+            text-align: center;
+        }
+        .pg-content{
+            top: 50px;
+            left:0;
+            bottom: 0;
+            right:0;
+        }
+        .login{
+            margin: 0 auto;
+            height: 600px;
+            width: 900px;
+        }
+        .mylog{
+            width: 300px;
+            height: 300px;
+            margin-top: 150px;
+            margin-left: 50px;
+        }
+        .user-input{
+            height: 300px;
+            width: 400px;
+            margin-top: 150px;
+            border: solid silver 1px;
+            position: relative;
+        }
+        .user-input form{
+            text-align: center;
+            margin-top: 50px;
+        }
+        .register{
+            height: 40px;
+            width: 100px;
+            right: 0;
+            bottom: 0;
+            position: absolute;
+            background-color: silver;
+            border-top: solid silver 1px;
+            border-left: solid silver 1px;
+            line-height: 40px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="pg-header">
+        <div class="log left">
+            <i class="icon-comments-alt icon-2x"></i>
+            聊天室
+        </div>
+    </div>
+    <div class="pg-content">
+        <div class="container">
+            <div class="login">
+                <div class="left">
+                    {% load static %}
+                    <img  class="mylog" src="{% static "imgs/log.jpg" %}" alt="My image"/>
+                </div>
+                <div class="user-input left">
+                    <form class="form-horizontal" method="post" action="{% url 'login' %}">{% csrf_token %}
+                        <div class="control-group"><label class="control-label" contenteditable="true" for="inputUsername">用户名</label>
+                            <div class="controls"><input name="inputUsername" placeholder="Username" type="text"/></div>
+                        </div>
+
+                        <div class="control-group"><label class="control-label" contenteditable="true"
+                                                          for="inputPassword">密码</label>
+
+                            <div class="controls"><input name="inputPassword" placeholder="Password" type="password"/>
+                            </div>
+                        </div>
+
+                        <div class="control-group">
+                            <div class="controls"><label class="checkbox" contenteditable="true"><input
+                                    type="checkbox"/> Remember me </label>
+                                <button class="btn" contenteditable="true" type="submit">登陆</button>
+                                <p style="color: red">{{ login_err }}</p>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="register">
+                        <a href="{% url 'register' %}">快速注册</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="pg-footer"></div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+</body>
+</html>

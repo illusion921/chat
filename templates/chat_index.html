@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WEB聊天室</title>
+    <!-- custorm css -->
+    <link href="/static/css/mychat.css" rel="stylesheet">
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-theme.css" rel="stylesheet">
+    <link href="/static/css/bootstrap-theme.min.css" rel="stylesheet">
+
+
+</head>
+
+<body>
+    <div class="row">
+        <div class="main-box col-md-10 col-lg-10">
+            <div class="contact-box col-md-3 col-lg-3">
+                <div class="profile-box row">
+                    <div class="col-md-4 head-img">
+                        <img src="/static/imgs/user.png">
+                    </div>
+                    <div class="dropdown col-md-8">
+                        {% if request.user.is_authenticated %}
+                            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1"
+                                    data-toggle="dropdown" from_id="{{ request.user.userprofile.id }}"
+                                    aria-haspopup="true" aria-expanded="true">
+                                {{ request.user.username }}
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                                <li><a href="#">Action</a></li>
+                                <li><a href="#">Another action</a></li>
+                                <li><a href="#">Something else here</a></li>
+                                <li role="separator" class="divider"></li>
+                                <li><a href="/quit">退出</a></li>
+                            </ul>
+                        {% else %}
+                            <a href="/login">登录</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                    <div>
+
+                          <!-- Nav tabs -->
+                          <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active" id = '1'><a href="#contact" aria-controls="home" role="tab" data-toggle="tab">联系人</a></li>
+                            <li role="presentation" id = '2'><a href="#group" aria-controls="profile" role="tab" data-toggle="tab">群组</a></li>
+                            <li role="presentation" id ='3'><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">设置</a></li>
+                          </ul>
+
+
+
+                        <div class="tab-content">
+
+                            <div role="tabpanel" class="tab-pane active" id="contact">
+                                {% for friend in request.user.userprofile.friends.select_related %}
+                                <a href="#" class="list-group-item" send_type = "single" name = "{{ friend }}" to_id="{{ friend.id }}">{{ friend }}<span style="background-color: deepskyblue;" class="badge hide pull-right" ></span></a>
+
+                                {% endfor %}
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="group">
+                                {% for group in request.user.userprofile.chat_group.select_related %}
+                                <a href="#" class="list-group-item" send_type = "group" name = "{{ group }}" to_id="{{ group.id }}">{{ group }}<span style="background-color: deepskyblue;" class="badge hide pull-right" ></span></a>
+
+                                {% endfor %}
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="settings">...</div>
+
+                        </div>
+                    </div>
+
+            </div>
+
+
+            <div class="dialog-box col-md-7 col-lg-7">
+                <div class="dialog-box-head" id="dialog-head">
+                    <span to_id="-2" to_name="web_chat" send_type="single"><h3>web_chat</h3></span>
+                </div>
+                <div class="dialog-box-mid" id="dialog-mid"></div>
+                <div >{% csrf_token %}
+                    <textarea class="dialog-box-input" name="msg" id="input_msg" placeholder="please input" ></textarea>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+    <script src="/static/js/bootstrap.min.js"></script>
+
+    <script type="text/javascript">
+        global_msg_box = {
+            'single':{},
+            'group':{}
+            };
+
+        $(document).ready(function (){
+
+            get_msg();
+            $(".tab-pane a").click(function () {
+
+                $(this).siblings().removeClass("active");
+                $($(this).parent().siblings()).children('a').removeClass('active');
+                $(this).addClass("active");
+                $(this).children('span').addClass("hide");
+                $(this).children('span').text('0');
+                var type=$(this).attr('send_type');
+                var id=$(this).attr('to_id');
+                var to_name = $(this).attr('name');
+                var to_id = $(this).attr('to_id');
+                var send_type = $(this).attr('send_type');
+                SwitchDialogBox(type,id);
+                var dialog_head="<span to_id="+to_id+" to_name="+to_name+" send_type="+send_type+"><h3>"+to_name+"</h3></span>";
+                OpenDialog(dialog_head);
+
+
+            });
+
+        }
+
+        );
+
+        function OpenDialog(ele) {
+            $('.dialog-box-head').html(ele);
+        }
+
+
+
+        $("body").delegate('textarea','keydown',function (e) {
+            if(e.which == '13'){
+                var msg_text=$('textarea').val();
+                console.log(msg_text);
+                if ($.trim('textarea').length>0){
+
+                    send_msg(msg_text);
+                    send_msg_bg(msg_text)
+                }
+                $('textarea').val('');
+            }
+        });
+
+        function GetCSRFToken(){
+
+           var csrf_token= $("input[name='csrfmiddlewaretoken']").val();
+           return csrf_token;
+        }
+
+        function send_msg(e) {
+            var name = $(".dropdown button").text();
+
+            var msg="<div class='row'><div class='pull-right'>" + "<span style='margin-left:30px'>" +
+                     name + "</span>" + "<span>" + date2str(new Date(), "yyyy-MM-d h:m:s") +
+                    "</span>" + "<p class='msg-box-text'>" + e + "</p>"
+                     + "</div></div>";
+            $("#dialog-mid").append(msg);
+            $("#dialog-mid").animate({
+            scrollTop:$("#dialog-mid")[0].scrollHeight},500
+        )}
+
+        function send_msg_bg(e) {
+            var data = {
+                    type : $(".tab-content div.tab-pane.active a").attr('send_type'),
+                    from_id : $(".dropdown button").attr('from_id'),
+                    to_name : $("#dialog-head span").attr('to_name'),
+                    to_id : $("#dialog-head span").attr('to_id'),
+                    msg : e
+            };
+
+            $.post("{% url 'upload' %}",{'data':JSON.stringify(data),'csrfmiddlewaretoken':GetCSRFToken},
+                    function(collback){
+                console.log(collback)
+            });}
+
+        function get_msg() {
+            var get_id = $(".dropdown button").attr('from_id');
+
+
+            $.getJSON("{% url 'get_msg' %}",{"get_id":get_id},function(collback){
+                var old_to_id = $(".dialog-box-head span").attr('to_id');
+                var old_to_name = $(".dialog-box-head span").attr('to_name');
+                console.log(old_to_id);
+                $.each(collback,function (index,msg) {
+                    if(msg.type=='single'){
+                        if (msg.from_id==old_to_id){
+                        console.log(msg);
+                        var msg_div = "<div class='row'><div class='pull-left'>"+ "<span>" + old_to_name + "</span>" +
+                                "<span>" + msg.date + "</span>" +
+                                "<p class='msg-box-text'>" + msg.msg +"</p>" +
+                                "</div></div>" ;
+
+                        $('.dialog-box-mid').append(msg_div);
+
+
+                        }
+                        //".tab-pane a['to_id'='" + msg.from_id+"']"
+                        else{
+                            var msg_count_ele = $(".tab-pane a[to_id='" + msg.from_id+"'] span");
+                            msg_count_ele.text(parseInt(msg_count_ele.text())+1);
+                            //console.log(a);
+
+                            msg_count_ele.removeClass('hide');
+
+
+                            new_html_ele = "<div class='row'><div class='pull-left'>"+ "<span>" + old_to_name + "</span>" +
+                                "<span>" + msg.date + "</span>" +
+                                "<p class='msg-box-text'>" + msg.msg +"</p>" +
+                                "</div></div>" ;
+                            if(global_msg_box[msg.type][msg.from_id]==null){
+                                global_msg_box[msg.type][msg.from_id] =new_html_ele;
+                            }
+                            else{
+
+                            }
+
+
+                        }
+
+                    }
+                    else{
+
+                    }
+
+
+                });
+                get_msg();
+            });
+
+        }
+
+
+
+        function date2str(x, y) {
+           var z = {
+              y: x.getFullYear(),
+              M: x.getMonth() + 1,
+              d: x.getDate(),
+              h: x.getHours(),
+              m: x.getMinutes(),
+              s: x.getSeconds()
+           };
+           return y.replace(/(y+|M+|d+|h+|m+|s+)/g, function(v) {
+              return ((v.length > 1 ? "0" : "") + eval('z.' + v.slice(-1))).slice(-(v.length > 2 ? v.length : 2))
+           });
+        }
+        function SwitchDialogBox(type,id) {
+            var old_contact_id = $('.dialog-box-head span').attr('to_id');
+            var old_contact_type = $('.dialog-box-head span').attr('send_type');
+            var old_contact_content=$('.dialog-box-mid').html();
+            global_msg_box[old_contact_type][old_contact_id]=old_contact_content;
+            if(global_msg_box[type][id]==null){
+                var ele = ' ';
+                console.log('---');
+            }
+
+            else{
+                var ele =global_msg_box[type][id];
+            }
+            console.log(type,id);
+            $('.dialog-box-mid').html(ele);
+
+
+        }
+
+    </script>
+</body>
+</html>
+

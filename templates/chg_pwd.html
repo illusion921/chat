@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>chage passwd</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/mychat.css" rel="stylesheet">
+
+    <style type="text/css">
+        .page-left{
+
+            height: 500px;
+            width: 550px;
+            margin-top: 30px;
+            border-right: dashed black 1px;
+
+        }
+        .page-right{
+            height: 500px;
+            width: 550px;
+            margin-top: 30px;
+        }
+
+        .welcome{
+            height: 50px;
+            width: 550px;
+        }
+
+        #create div{
+            width: 400px;
+            margin-bottom: 20px;
+        }
+
+
+    </style>
+</head>
+<body>
+    <div class="pg-header">
+        <div class="log left">
+            <i class="icon-comments-alt icon-2x"></i>
+            聊天室
+        </div>
+        <div class="user right">
+            {% load static %}
+            <img src="{% static "imgs/user.png" %}" alt="My image"/>
+            <div class="dropdown right">
+                {% if request.user.is_authenticated %}
+                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1"
+                            data-toggle="dropdown" from_id="{{ request.user.userprofile.id }}"
+                            from_name="{{ request.user.userprofile.name }}"
+                            aria-haspopup="true" aria-expanded="true">
+                        {{ request.user.userprofile.name }}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                        <li><a href="/">聊天</a></li>
+                        <li><a href="{% url 'imgs' %}">收到的文件</a></li>
+                        <li><a href="{% url 'chat_record' %}">聊天记录</a></li>
+                        <li><a href="{% url 'group' %}">创建群组</a></li>
+                        <li><a href="{% url 'chgpwd' %}">修改密码</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="/quit">退出</a></li>
+                    </ul>
+                {% else %}
+                    <a href="/login">登录</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="pg-content">
+        <div class="container">
+            <div class="page-left left">
+                <div class="welcome">
+                    <i class="icon-desktop icon-3x"></i> 修改密码
+                </div>
+                <div  id="create">
+                    <form method="post">{% csrf_token %}
+                        <div class="input-group">
+                          <span class="input-group-addon" id="basic-addon1">新密码</span>
+                          <input type="password" class="form-control" placeholder="新密码" name='newpwd' aria-describedby="basic-addon1">
+                        </div>
+                        <div class="input-group">
+                          <span class="input-group-addon" id="basic-addon1">确认密码</span>
+                          <input type="password" class="form-control" placeholder="确认密码" name='newpwdagain' aria-describedby="basic-addon1">
+                        </div>
+                        <div >
+                        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit1">修改密码</button>
+                        </div>
+                        <p style="color: red">{{ error }}</p>
+                    </form>
+                </div>
+            </div>
+
+            <div class="page-right right">
+                <div class="welcome">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="pg-footer"></div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+</body>
+</html>

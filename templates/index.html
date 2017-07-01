@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh_CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>chat</title>
+    <link href="/static/css/mychat.css" rel="stylesheet">
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <style type="text/css">
+
+    </style>
+</head>
+<body>
+    <div id="formbackground" style="position:absolute; z-index:-1;"><img src="/static/imgs/bg_1.jpg" height="100%" width="100%"/></div>
+    <div class="pg-header">
+        <div class="log left">
+            <i class="icon-comments-alt icon-2x"></i>
+            聊天室
+        </div>
+        <div class="user right">
+            {% load static %}
+            <img src="{% static "imgs/user.png" %}" alt="My image"/>
+            <div class="right" data-toggle="modal" data-target="#gridSystemModal1" id="bell">
+                <a href="#"><span class="glyphicon glyphicon-bell" aria-hidden="true" id="bell-num">0</span></a>
+            </div>
+            <div class="dropdown right">
+                {% if request.user.is_authenticated %}
+                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1"
+                            data-toggle="dropdown" from_id="{{ request.user.userprofile.id }}"
+                            from_name="{{ request.user.userprofile.name }}"
+                            aria-haspopup="true" aria-expanded="true">
+                        {{ request.user.userprofile.name }}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                        <li><a href="/">聊天</a></li>
+                        <li><a href="{% url 'imgs' %}">收到的文件</a></li>
+                        <li><a href="{% url 'chat_record' %}">聊天记录</a></li>
+                        <li><a href="{% url 'group' %}">创建群组</a></li>
+                        <li><a href="#" data-toggle="modal" data-target="#gridSystemModal2">删除好友</a></li>
+                        <li><a href="{% url 'chgpwd' %}">修改密码</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="/quit">退出</a></li>
+                    </ul>
+                {% else %}
+                    <a href="/login">登录</a>
+                {% endif %}
+            </div>
+
+            <div id="gridSystemModal1" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridModalLabel" style="display: none;">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                      <h4 class="modal-title" id="gridModalLabel">好友添加</h4>
+                    </div>
+                    <div class="modal-body" id="fri-ver">
+
+                    </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div>
+            <div id="gridSystemModal2" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="gridModalLabel" style="display: none;">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+                      <h4 class="modal-title" id="gridModalLabel">好友删除</h4>
+                    </div>
+                    <div class="modal-body" id="fri-ver">
+
+                        {% for i in request.user.userprofile.friends.select_related %}
+                            <div class="row" del_name="{{ i }}">
+                                <div class="col-md-10 col-lg-10 col-xs-10">{{ i }}</div>
+                                <div class="col-md-2 col-lg-2 col-sx-2">
+                                    <button type="button" class="btn btn-default"  onclick="del('{{ i }}')">删除</button>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                    </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+        </div>
+      </div><!-- /.modal-content -->
+    </div><!-- /.modal-dialog -->
+  </div>
+        </div>
+    </div>
+
+    <div class="pg-content container">
+            <div class="main-box row">
+                <div class="contact-box col-md-4 col-lg-4 col-sx-4">
+
+                    <div id="glist">
+
+                          <!-- Nav tabs -->
+                          <ul class="nav nav-tabs" role="tablist">
+                            <li role="presentation" class="active" id = '1'><a href="#contact" aria-controls="home" role="tab" data-toggle="tab">联系人</a></li>
+                            <li role="presentation" id = '2'><a href="#group" aria-controls="profile" role="tab" data-toggle="tab">群组</a></li>
+                            <li role="presentation" id ='3'><a href="#settings" aria-controls="settings" role="tab" data-toggle="tab">发送</a></li>
+                            <li role="presentation" id ='4'><a href="#addfriend" aria-controls="addfriend" role="tab" data-toggle="tab">添加</a></li>
+                          </ul>
+
+
+
+                          <div class="tab-content">
+
+                            <div role="tabpanel" class="tab-pane active" id="contact">
+                                {% for friend in request.user.userprofile.friends.select_related %}
+                                <a href="#" class="list-group-item" send_type = "single" name = "{{ friend }}" to_id="{{ friend.id }}">{{ friend }}<span class="badge hide right">0</span></a>
+
+                                {% endfor %}
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="group">
+                                {% for group in group_all %}
+                                <a href="#" class="list-group-item" send_type = "group" name = "{{ group }}" to_id="{{ group.id }}">{{ group }}<span class="badge hide right">0</span></a>
+
+                                {% endfor %}
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="settings">
+
+                                <form id="uploadForm" action="{% url 'send_img' %}" enctype="multipart/form-data" method="post">{% csrf_token %}
+                                    <div class="form-group">
+                                        <label>user</label>
+                                        <input type="text" name="user" readonly="readonly" class="form-control" value="{{ request.user.userprofile.name }} "/>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>to_user</label>
+                                        <input type="text" name="to_user" class="form-control"/>
+                                    </div>
+                                    <div class="form-group">
+                                        <input id="file" type="file" name="file"/>
+                                    </div>
+                                    <button id="upload" type="submit" class="btn btn-default">upload</button>
+                                </form>
+
+                            </div>
+                            <div role="tabpanel" class="tab-pane" id="addfriend">
+                                <div class="form-group">
+                                    <select class="form-control" id="select_type">
+                                          <option>single</option>
+                                          <option>group</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="Search" id="search">
+                                </div>
+                                <button type="submit" class="btn btn-default">Submit</button>
+                                <div id="addfriend1"></div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="dialog-box col-md-8 col-lg-8 col-xs-8">
+                    <div class="dialog-box-head" id="dialog-head">
+                        <span to_id="-2" to_name="web_chat" send_type="single"><h3>web_chat</h3></span>
+                    </div>
+                    <div class="dialog-box-mid" id="dialog-mid"></div>
+                    <div >{% csrf_token %}
+                        <textarea class="dialog-box-input" name="msg" id="input_msg" placeholder="please input" ></textarea>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    <div class="pg-footer"></div>
+
+
+
+
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+
+    <script type="text/javascript">
+        global_msg_box = {
+            'single':{},
+            'group':{}
+            };
+        container = {};
+
+        $(function(){
+            $('#formbackground').height($(window).height());
+            $('#formbackground').width($(window).width());
+        });
+
+        $(document).ready(function (){
+
+            get_msg();
+            confirmation();
+            setInterval("confirmation()",60000);
+
+            $(".tab-pane a").click(function () {
+
+                $(this).siblings().removeClass("active");
+                $($(this).parent().siblings()).children('a').removeClass('active');
+                $(this).addClass("active");
+                $(this).children('span').addClass("hide");
+                $(this).children('span').text('0');
+                var type=$(this).attr('send_type');
+                var id=$(this).attr('to_id');
+                var to_name = $(this).attr('name');
+                var to_id = $(this).attr('to_id');
+                var send_type = $(this).attr('send_type');
+                SwitchDialogBox(type,id);
+                var dialog_head="<span to_id="+to_id+" to_name="+to_name+" send_type="+send_type+"><h3>"+to_name+"</h3></span>";
+                OpenDialog(dialog_head);
+
+
+            });
+
+        }
+
+        );
+
+        function OpenDialog(ele) {
+            $('.dialog-box-head').html(ele);
+        }
+
+
+
+        $("body").delegate('textarea','keydown',function (e) {
+            if(e.which == '13'){
+                var msg_text=$('textarea').val();
+                console.log(msg_text);
+                if ($.trim('textarea').length>0){
+
+                    send_msg(msg_text);
+                    send_msg_bg(msg_text)
+                }
+                $('textarea').val('');
+            }
+        });
+
+        function GetCSRFToken(){
+
+           var csrf_token= $("input[name='csrfmiddlewaretoken']").val();
+           return csrf_token;
+        }
+
+        function send_msg(e) {
+            var name = $(".dropdown button").text();
+
+            var msg="<div class='row'><div class='pull-right'>" + "<span >" + name
+                    + "</span>" + "<span>" + date2str(new Date(), "yyyy-MM-d h:m:s") +"</span>"
+                     + "<p class='msg-box-text'>" + e + "</p>"
+                     +"</div>" + "</div>";
+            $("#dialog-mid").append(msg);
+            $("#dialog-mid").animate({
+            scrollTop:$("#dialog-mid")[0].scrollHeight},500
+        )}
+
+        function send_msg_bg(e) {
+            var data = {
+                    type : $(".tab-content div.tab-pane.active a").attr('send_type'),
+                    from_id : $(".dropdown button").attr('from_id'),
+                    from_name : $(".dropdown button").attr('from_name'),
+                    to_name : $("#dialog-head span").attr('to_name'),
+                    to_id : $("#dialog-head span").attr('to_id'),
+                    msg : e
+            };
+            console.log($("#dialog-head span").attr('to_name'));
+            $.post("{% url 'upload' %}",{'data':JSON.stringify(data),'csrfmiddlewaretoken':GetCSRFToken},
+                    function(collback){
+                console.log(collback)
+            });}
+
+        function get_msg() {
+            var get_id = $(".dropdown button").attr('from_id');
+
+
+            $.getJSON("{% url 'get_msg' %}",{"get_id":get_id},function(collback){
+                var old_to_id = $(".dialog-box-head span").attr('to_id');
+                var old_to_name = $(".dialog-box-head span").attr('to_name');
+                var from_name = $(".dropdown button").attr('from_name');
+
+                $.each(collback,function (index,msg) {
+                    console.log(msg);
+                    if(msg.type=='single'){
+                        if (msg.from_id==old_to_id){
+                        console.log(msg);
+                        var msg_div = "<div class='row'><div class='left'>"+ "<span>" + msg.from_name + "</span>" +
+                                "<span>" + msg.date + "</span>" +
+                                "<p class='msg-box-text'>" + msg.msg +"</p>" +
+                                "</div></div>" ;
+
+                        $('.dialog-box-mid').append(msg_div);
+
+
+                        }
+                        //".tab-pane a['to_id'='" + msg.from_id+"']"
+                        else{
+                            var msg_count_ele = $(".tab-pane a[to_id='" + msg.from_id+"'][send_type='single'] span");
+                            msg_count_ele.text(parseInt(msg_count_ele.text())+1);
+                            msg_count_ele.removeClass('hide');
+
+                            new_html_ele = "<div class='row'><div class='left'>"+ "<span>" + msg.from_name + " " + "</span>" +
+                                "<span>" + msg.date + "</span>" +
+                                "<p class='msg-box-text'>" + msg.msg +"</p>" +
+                                "</div></div>" ;
+                            if(global_msg_box[msg.type][msg.from_id]==null){
+                                global_msg_box[msg.type][msg.from_id] = new_html_ele;
+                            }
+                            else{
+                                global_msg_box[msg.type][msg.from_id] +=new_html_ele;
+                            }
+
+
+                        }
+
+                    }
+                    else{
+                        if (msg.to_name == old_to_name) {
+                            if (msg.from_name != from_name){
+                                var msg_div = "<div class='row'><div class='left'>" + "<span>" + msg.from_name + " " +"</span>" +
+                                    "<span>" + msg.date + "</span>" +
+                                    "<p class='msg-box-text'>" + msg.msg + "</p>" +
+                                    "</div></div>";
+
+                                $('.dialog-box-mid').append(msg_div);
+                            }
+
+
+                        }
+                        else{
+                            var msg_count_ele = $(".tab-pane a[to_id='" + msg.to_id+"' ][send_type='group'] span");
+                            msg_count_ele.text(parseInt(msg_count_ele.text())+1);
+                            msg_count_ele.removeClass('hide');
+                            var new_ele = "<div class='row'><div class='pull-left'>" + "<span>" + msg.from_name + " " + "</span>" +
+                                    "<span>" + msg.date + "</span>" +
+                                    "<p class='msg-box-text'>" + msg.msg + "</p>" +
+                                    "</div></div>";
+                            if(global_msg_box[msg.type][msg.to_id]==null){
+                                global_msg_box[msg.type][msg.to_id] = new_ele;
+                            }
+                            else{
+                                global_msg_box[msg.type][msg.to_id] +=new_ele;
+                            }
+                            {% comment %}global_msg_box[msg.type][msg.to_id] +=new_ele;{% endcomment %}
+
+                        }
+
+
+
+                    }
+                });
+                get_msg();
+            });
+
+        }
+
+
+
+        function date2str(x, y) {
+           var z = {
+              y: x.getFullYear(),
+              M: x.getMonth() + 1,
+              d: x.getDate(),
+              h: x.getHours(),
+              m: x.getMinutes(),
+              s: x.getSeconds()
+           };
+           return y.replace(/(y+|M+|d+|h+|m+|s+)/g, function(v) {
+              return ((v.length > 1 ? "0" : "") + eval('z.' + v.slice(-1))).slice(-(v.length > 2 ? v.length : 2))
+           });
+        }
+        function SwitchDialogBox(type,id) {
+            var old_contact_id = $('.dialog-box-head span').attr('to_id');
+            var old_contact_type = $('.dialog-box-head span').attr('send_type');
+            var old_contact_content=$('.dialog-box-mid').html();
+            global_msg_box[old_contact_type][old_contact_id]=old_contact_content;
+            if(global_msg_box[type][id]==null){
+                var ele = ' ';
+                global_msg_box[type][id] = ele;
+            }
+
+            else{
+                var ele =global_msg_box[type][id];
+            }
+            console.log(type,id);
+            $('.dialog-box-mid').html(ele);
+
+
+        }
+
+        $('#addfriend button').on('click',function () {
+            $('#addfriend1').html(" ");
+            var search_data = $('#search').val();
+            var type=$('#select_type option:selected').text();
+            data = {
+                'search_data':search_data,
+                'type':type,
+            };
+            console.log(search_data);
+            $.post("{% url 'search' %}",{'data':JSON.stringify(data),'csrfmiddlewaretoken':GetCSRFToken},
+                    function(callback){
+                        console.log(callback);
+                        var a = callback.slice(1,-1).replace(/\"/g,"").split(',');
+                        var from_name = $(".dropdown button").attr('from_name');
+                        for(var i=0;i<a.length;i++){
+                            var aa = a[i];
+                            str = unescape(aa.replace(/\\u/g, "%u"));
+                            str = str.trim();
+                            console.log(str);
+                            if(str!=from_name){
+                                var ele = "<div class='form-group'>" + str + "<a href='#' onclick='add_fri(" +
+                                       '"' + str + '"' + ")'>" +
+                                       "<span class='glyphicon glyphicon-plus right'>"
+                                       + "</sapn></a></div>";
+                                $('#addfriend1').append(ele);
+                            }
+                        }
+
+                })
+            });
+
+        function add_fri(name) {
+            var type=$('select option:selected').text();
+            var from_name = $(".dropdown button").attr('from_name');
+            var add_name = name;
+            var add_data = {
+                'name' : from_name,
+                'add_name':add_name,
+                'type':type
+            };
+            $.post("{% url 'add_fri' %}",{'data':JSON.stringify(add_data),'csrfmiddlewaretoken':GetCSRFToken},function(callback){
+                alert(callback);
+            });
+        }
+
+        function confirmation() {
+            var get_id = $(".dropdown button").attr('from_id');
+            $.getJSON("{% url 'confirm' %}",{'get_id':get_id},function(callback){
+                console.log(callback);
+                $.each(callback,function (index,data) {
+                    console.log(container);
+                    if (container[data.user] == null){
+                        container[data.user] = 'aa';
+                        if(data.is_new==true){
+                        alert('你有一个好友请求！！！');
+
+                        }
+                        var prompt = data.user + '请求添加你为好友！！！';
+                        var ele = "<div class='row' add_id='" +data.user +"'><div class='col-md-8'>" + prompt + "</div>" + "<div class='col-md-2'>" +
+                                    "<button type='button' class='btn btn-default' id='"+data.user+"' onclick=add('"+data.user+"')>添加</button></div>" + "<div class='col-md-2'>" +
+                                "<button type='button' class='btn btn-default' id='"+data.user+"' onclick=refuse('"+data.user+"')>拒绝</button></div></div>" ;
+                        var bell_num = $('#bell-num').text();
+                        $('#bell-num').text(Number(bell_num)+1);
+                        $('#fri-ver').append(ele);
+
+                    }
+                });
+
+            })
+        }
+        
+
+        function add(id) {
+
+                var user = id;
+                var add_user = $(".dropdown button").attr('from_name');
+                var data = {
+                    'user':user,
+                    'add_user':add_user
+                };
+                $.post("{% url 'add_signal' %}",{'data':JSON.stringify(data),'csrfmiddlewaretoken':GetCSRFToken},function(callback){
+                    alert(callback);
+                    $("div[add_id='" + user + "']").remove();
+                })
+
+        }
+
+        function refuse(id) {
+            var user=id;
+                var add_user = $(".dropdown button").attr('from_name');
+                var data = {
+                    'user':user,
+                    'add_user':add_user
+                };
+                $.post("{% url 'refuse' %}",{'data':JSON.stringify(data),'csrfmiddlewaretoken':GetCSRFToken},function(callback){
+                    alert(callback);
+                    $("div[add_id='" + user + "']").remove();
+                })
+        }
+
+        function del(name) {
+            var user = $(".dropdown button").attr('from_name');
+            var del_user = name;
+            var data = {
+                'user':user,
+                'del_user':del_user
+            };
+            $.post("{% url 'del_user' %}",{'data':JSON.stringify(data),'csrfmiddlewaretoken':GetCSRFToken},function(callback){
+                    alert(callback);
+                    $("div[del_name='" + del_user + "']").remove();
+                });
+
+        }
+
+    </script>
+</body>
+</html>

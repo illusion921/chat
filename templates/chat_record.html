@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>record</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/mychat.css" rel="stylesheet">
+    <style type="text/css">
+        .page-left{
+
+            height: 500px;
+            width: 350px;
+            margin-top: 30px;
+            border-right: dashed black 1px;
+
+        }
+        .page-right{
+            height: 500px;
+            width: 700px;
+            margin-top: 30px;
+        }
+
+        .welcome{
+            height: 50px;
+            width: 550px;
+        }
+        #list-user{
+            width: 300px;
+        }
+        #msg-list{
+            height: 500px;
+            overflow-y: auto;
+
+        }
+        #msg-list div{
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="pg-header">
+        <div class="log left">
+            <i class="icon-comments-alt icon-2x"></i>
+            聊天室
+        </div>
+        <div class="user right">
+            {% load static %}
+            <img src="{% static "imgs/user.png" %}" alt="My image"/>
+            <div class="dropdown right">
+                {% if request.user.is_authenticated %}
+                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1"
+                            data-toggle="dropdown" from_id="{{ request.user.userprofile.id }}"
+                            from_name="{{ request.user.userprofile.name }}"
+                            aria-haspopup="true" aria-expanded="true">
+                        {{ request.user.userprofile.name }}
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                        <li><a href="/">聊天</a></li>
+                        <li><a href="{% url 'imgs' %}">收到的文件</a></li>
+                        <li><a href="{% url 'chat_record' %}">聊天记录</a></li>
+                        <li><a href="{% url 'group' %}">创建群组</a></li>
+                        <li><a href="{% url 'chgpwd' %}">修改密码</a></li>
+                        <li role="separator" class="divider"></li>
+                        <li><a href="/quit">退出</a></li>
+                    </ul>
+                {% else %}
+                    <a href="/login">登录</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="pg-content container">
+        <div class="page-left left">{% csrf_token %}
+            <div role="tabpanel" class="tab-pane active" id="list-user">
+                {% for u in data %}
+                <a href="#" class="list-group-item" >{{ u }}</a>
+                <p></p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="page-right right">
+            <div id="msg-list"></div>
+        </div>
+    </div>
+    <div class="pg-footer"></div>
+
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/bootstrap.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('#list-user a').click(function () {
+                $(this).addClass('active');
+                $(this).siblings().removeClass('active');
+                var user = $(this).text();
+                $('#msg-list').html('');
+                get_record(user);
+            })
+        });
+
+        function GetCSRFToken(){
+
+           var csrf_token= $("input[name='csrfmiddlewaretoken']").val();
+           return csrf_token;
+        }
+
+        function get_record(uu) {
+            var user = uu;
+            $.post("{% url 'chat_record' %}",{'data':JSON.stringify(user),'csrfmiddlewaretoken':GetCSRFToken},
+            function (callback) {
+                var aa = JSON.parse(callback);
+                $.each(aa,function (index,data) {
+                    var ele = '<div class="panel panel-default"><div class="panel-heading">' +
+                                uu + ' ' + index + '</div><div class="panel-body">' + data +
+                                '</div></div>' ;
+                    $('#msg-list').append(ele);
+                    {% comment %}$('#msg-list').animate(
+                            {scrollTop:$("#msg-list")[0].scrollHeight},500
+                    ){% endcomment %}
+                })
+            })
+        }
+    </script>
+</body>
+</html>

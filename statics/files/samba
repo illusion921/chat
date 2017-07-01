@@ -1,0 +1,48 @@
+samba服务：
+类似于nfs服务。分享出来一个文件夹，用户可以在文件夹中进行修改。类似于win中网上邻居的工作组。
+
+一。步骤：
+
+1.在server上安装samba.x86_64 samba-client.x86_64。在desktop上安装samba-client.x86_64。
+2.创建一个共享的文件夹/smb
+3.修改selinux信息 semanage fcontext -a -t samba_share_t '/smb(/.*)?'
+		 restorecon -vvRF /smb/
+		 ll -dZ /smb
+4.启动 smb nmb服务。
+5.打开防火墙 samba
+6.修改配置文件/etc/samba/smb.conf
+	hosts allow = 172.25.6.  		默认可以不修改，放行所有
+	security = share			还有server，user选项
+	[mysam]					名字
+        comment = my samb share			详细描述
+        path = /smb				路径
+#       guest ok = yes				是否允许匿名访问
+#       browseable = no				是否可以查询到
+        writable = yes				可写
+        public = yes				是否公开
+	write list = @share			对share组开放写权限
+7.修改完毕后，重启服务smb，nmb。
+8.在desktop上可以查找smbclient -L //server6.example.com/（可以是IP）
+9.进入目录 smbclient //server6.example.com/mysam -U natasha 以natasha进入
+          smbclient //server6.example.com/mysam -U 以匿名用户进入
+10.如果要以用户进入，在server上需要创建用户，samba是以用户名为查找的，设定密码命令
+smbpasswd -a mima
+11.如果没有对/smb目录加写权限，不可以对mysam目录进行写操作。同理，组用户也需要加入组权限。
+
+二。将samba目录挂载
+
+1.将配置文件此项修改为 security = user,保存推出，并重启服务。
+2.在desktop上的/etc/fstab里写入挂载信息，安装cifs使用工具。
+//172.25.6.11/mysam     /mnt    cifs    defaults,username=harry,passwd=redhat,multiuser,sec=ntlmssp     0 0
+>>>username=harry,password=redhat    可以将这写入一个文件中1.txt credentials=1.txt
+3.挂载。
+4.如果有两个用户，natasha在share组，harry不在，可以利用harry进行默认挂载用户，natasha用户可以进行管理，具有写权限，根据此来修改/smb的权限
+	
+	chown .share /smb
+	chmod 770 /smb
+
+
+注意：在desktop（samba用用户名查找，在server和desktop上创建natasha，harry，可以通用）切换成natasha，不能对mnt目录有写权限，要想有写权限，需要进行提权，命令如下	cifscreds add server6.example.com，之后便可以写入了。
+
+
+
